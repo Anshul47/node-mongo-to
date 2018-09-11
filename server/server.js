@@ -1,12 +1,13 @@
-var express = require('express');
-var bodyParser = require('body-parser');
+const express = require('express');
+const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 
-var {mongoose} = require('./db/mongoose');
-var {Todo} = require('./models/todo'); 
-var {User} = require('./models/user');
+const {mongoose} = require('./db/mongoose');
+const {Todo} = require('./models/todo'); 
+const {User} = require('./models/user');
 
 var app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -22,8 +23,53 @@ app.post('/todos', (req, res) => {
     });
 });
 
+app.post('/todos/text/:id', (req, res) => {
+    
+    var id = req.params.id;
+    if(ObjectID.isValid(id)){
+
+        var text = req.body.text;
+        if(text){
+            var todo = {text};
+            Todo.findOneAndUpdate({_id: id}, {$set: todo}, {new: true}).then((doc) => {
+                res.send(doc);
+            }, (e) => {
+                res.status(400).send(e);
+            });
+        }else{
+            res.status(404).send({error: 'Invalid key'});
+        }    
+    }else{
+        res.status(404).send({error: 'Invalid Id'});
+    }
+    
+});
+
+app.post('/todos/completed/:id', (req, res) => {
+    
+    var id = req.params.id;
+    if(ObjectID.isValid(id)){
+        var todo = {
+            completed: true,
+            completedAt: new Date().getTime()
+        };
+        Todo.findOneAndUpdate({_id: id}, {$set: todo}, {new: true}).then((doc) => {
+            res.send(doc);
+        }, (e) => {
+            res.status(400).send(e);
+        });
+    }else{
+        res.status(404).send({error: 'Invalid Id'});
+    }
+});
+
 app.get('/todos', (req, res) => {
-    Todo.find().then((todos) => {
+    Todo.find(null ,null , {
+            sort:{
+                completedAt: -1 //Sort by Date Added DESC
+            }
+        
+    }).then((todos) => {
         res.send({
             data: todos 
         });
@@ -51,6 +97,6 @@ app.get('/todos/:id', (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log('Server started on port 3000');
+app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
 });
