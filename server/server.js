@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+// Insert New Todo
 app.post('/todos', (req, res) => {
     var todo = new Todo({
         text: req.body.text
@@ -23,6 +24,42 @@ app.post('/todos', (req, res) => {
     });
 });
 
+// Get all Todos
+app.get('/todos', (req, res) => {
+    Todo.find(null ,null , {
+            sort:{
+                completedAt: -1 //Sort by Date Added DESC
+            }
+        
+    }).then((todos) => {
+        res.send({
+            data: todos 
+        });
+    }, (e) => {
+        res.status(400).send(e);
+    });
+});
+
+// Get Todo By ID
+app.get('/todos/:id', (req, res) => {
+    
+    var id = req.params.id;
+    if(ObjectID.isValid(id)){
+        Todo.find({
+            _id: id
+        }).then((todos) => {
+            res.send({
+                data: todos
+            });
+        }, (e) => {
+            res.status(400).send(e);
+        });
+    }else{
+        res.status(404).send();
+    }
+});
+
+//Update Todo text By ID
 app.post('/todos/text/:id', (req, res) => {
     
     var id = req.params.id;
@@ -45,6 +82,7 @@ app.post('/todos/text/:id', (req, res) => {
     
 });
 
+//Update Todo Status By ID
 app.post('/todos/completed/:id', (req, res) => {
     
     var id = req.params.id;
@@ -60,40 +98,6 @@ app.post('/todos/completed/:id', (req, res) => {
         });
     }else{
         res.status(404).send({error: 'Invalid Id'});
-    }
-});
-
-app.get('/todos', (req, res) => {
-    Todo.find(null ,null , {
-            sort:{
-                completedAt: -1 //Sort by Date Added DESC
-            }
-        
-    }).then((todos) => {
-        res.send({
-            data: todos 
-        });
-    }, (e) => {
-        res.status(400).send(e);
-    });
-});
-
-
-app.get('/todos/:id', (req, res) => {
-
-    var id = req.params.id;
-    if(ObjectID.isValid(id)){
-        Todo.find({
-            _id: id
-        }).then((todos) => {
-            res.send({
-                data: todos
-            });
-        }, (e) => {
-            res.status(400).send(e);
-        });
-    }else{
-        res.status(404).send();
     }
 });
 
