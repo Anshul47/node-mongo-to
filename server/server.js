@@ -101,6 +101,29 @@ app.post('/todos/completed/:id', (req, res) => {
     }
 });
 
+// Insert New Todo
+app.post('/user', (req, res) => {
+
+    
+    var user = new User({
+        uemail: req.body.email,
+        password: req.body.password
+    });
+
+    
+    user.save().then((doc) => {
+        // res.send(doc);
+        return user.generateAuthToken();
+    }).then((token) => {
+        res.header('x-auth', token).send(user);
+    }).catch((e) => {
+        console.log(req.body.email);
+        console.log(req.body.password);
+        
+        res.status(400).send(e);
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
 });
